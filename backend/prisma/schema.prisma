@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       Role     @default(USER)
+  phone      String?
+  jobTitle   String?
+  department String?
+  bio        String?
+  avatarUrl  String?
+  clientId   String?
+  client     Client?  @relation("ClientUsers", fields: [clientId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  assignedPosts  Post[]          @relation("AssignedTo")
+  createdPosts   Post[]          @relation("CreatedBy")
+  comments       Comment[]
+  completedItems ChecklistItem[]
+  notifications  Notification[]
+  activities     PostActivity[]
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  ADMIN_MANAGER
+  USER
+  CLIENT
+  MANAGER
+  EDITOR
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  color          String   @default("#0071E3")
+  logoUrl        String?
+  industry       String?
+  notes          String?
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  platforms      String[]
+  portalEnabled  Boolean  @default(false)
+  bioTitle        String?
+  bioDescription  String?
+  bioLinks        Json?
+  strategy        Json?
+  associatedPages Json?
+  createdAt       DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  posts       Post[]
+  hashtagSets HashtagSet[]
+  users       User[]       @relation("ClientUsers")
+}
+
+enum ContentType {
+  CAROUSEL
+  REEL
+  STATIC_IMAGE
+  VIDEO
+  STORY
+  THREAD
+  LONG_FORM
+}
+
+model Post {
+  id          String      @id @default(cuid())
+  title       String
+  caption     String?
+  mediaUrls   String[]
+  hashtags    String[]
+  platforms   Platform[]
+  contentType ContentType?
+  category    String?
+  status      PostStatus  @default(IDEA)
+  scheduledAt DateTime?
+  publishedAt DateTime?
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  contentPillar     String?
+  assetLink         String?
+  taggedPages       Json?
+  publishChecklist  Json?
+  rejectionReason   String?
+  clientApprovedBy  String?
+  clientApprovedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checklistItems ChecklistItem[]
+  comments       Comment[]
+  activities     PostActivity[]
+}
+
+model PostActivity {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+}
+
+model HashtagSet {
+  id        String   @id @default(cuid())
+  name      String
+  tags      String[]
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  platform  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Platform {
+  INSTAGRAM
+  LINKEDIN
+  FACEBOOK
+  TWITTER
+  YOUTUBE
+  TIKTOK
+  THREADS
+  BLUESKY
+}
+
+enum PostStatus {
+  IDEA
+  DRAFT
+  REVIEW
+  APPROVED
+  CLIENT_APPROVED
+  SCHEDULED
+  PAUSED
+  PUBLISHED
+  REJECTED
+}
+
+model ChecklistItem {
+  id            String    @id @default(cuid())
+  postId        String
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  label         String
+  completed     Boolean   @default(false)
+  completedAt   DateTime?
+  completedById String?
+  completedBy   User?     @relation(fields: [completedById], references: [id])
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  payload   Json
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
