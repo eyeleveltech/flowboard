@@ -114,14 +114,16 @@ export default function PlatformBadge({ platform, showFull = false }) {
     );
   }
 
+  const hideText = !showFull;
+
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
+      display: 'inline-flex', alignItems: 'center', gap: hideText ? 0 : 5,
       background: cfg.bg,
       color: cfg.color,
       border: `1px solid ${cfg.border}`,
-      borderRadius: 8,
-      padding: '3px 9px 3px 7px',
+      borderRadius: hideText ? '50%' : 8,
+      padding: hideText ? '5px' : '3px 9px 3px 7px',
       fontSize: 11,
       fontWeight: 600,
       whiteSpace: 'nowrap',
@@ -130,7 +132,7 @@ export default function PlatformBadge({ platform, showFull = false }) {
       <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         {cfg.icon}
       </span>
-      {showFull ? cfg.label : cfg.short}
+      {!hideText && (showFull ? cfg.label : cfg.short)}
     </span>
   );
 }

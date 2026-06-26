@@ -35,19 +35,19 @@ const CONTENT_TYPE_LABELS = {
 };
 
 const SORT_OPTIONS = [
-  { value: 'newest',    label: 'Newest first' },
-  { value: 'oldest',   label: 'Oldest first' },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
   { value: 'scheduled', label: 'Scheduled date' },
-  { value: 'title',    label: 'Title A–Z' },
+  { value: 'title', label: 'Title A–Z' },
 ];
 
 const STATUS_ACTIONS = [
-  { label: 'Submit for Review',     value: 'REVIEW',          icon: RotateCcw },
-  { label: 'Approve (Internal)',    value: 'APPROVED',        icon: CheckCircle },
-  { label: 'Mark Client Approved',  value: 'CLIENT_APPROVED', icon: UserCheck },
-  { label: 'Mark Scheduled',        value: 'SCHEDULED',       icon: CalendarClock },
-  { label: 'Mark Published',        value: 'PUBLISHED',       icon: CheckCircle },
-  { label: 'Move to Draft',         value: 'DRAFT',           icon: RotateCcw },
+  { label: 'Submit for Review', value: 'REVIEW', icon: RotateCcw },
+  { label: 'Approve (Internal)', value: 'APPROVED', icon: CheckCircle },
+  { label: 'Mark Client Approved', value: 'CLIENT_APPROVED', icon: UserCheck },
+  { label: 'Mark Scheduled', value: 'SCHEDULED', icon: CalendarClock },
+  { label: 'Mark Published', value: 'PUBLISHED', icon: CheckCircle },
+  { label: 'Move to Draft', value: 'DRAFT', icon: RotateCcw },
 ];
 
 /* ─── CSV helpers ─── */
@@ -114,42 +114,42 @@ export default function Posts() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const currentUser = useAuthStore((s) => s.user);
-  const isClient    = currentUser?.role === 'CLIENT';
-  const canDelete   = ['SUPER_ADMIN', 'ADMIN'].includes(currentUser?.role);
+  const isClient = currentUser?.role === 'CLIENT';
+  const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(currentUser?.role);
   const { data: clients = [] } = useClients();
-  const { data: users   = [] } = useUsers();
+  const { data: users = [] } = useUsers();
 
   // Filters
-  const [search,      setSearch]      = useState('');
-  const [clientId,    setClientId]    = useState(isClient ? (currentUser?.clientId ?? '') : (searchParams.get('clientId') ?? ''));
-  const [status,      setStatus]      = useState(searchParams.get('status') ?? '');
-  const [platform,    setPlatform]    = useState('');
-  const [assignedToId,setAssignedToId]= useState('');
+  const [search, setSearch] = useState('');
+  const [clientId, setClientId] = useState(isClient ? (currentUser?.clientId ?? '') : (searchParams.get('clientId') ?? ''));
+  const [status, setStatus] = useState(searchParams.get('status') ?? '');
+  const [platform, setPlatform] = useState('');
+  const [assignedToId, setAssignedToId] = useState('');
   const [contentType, setContentType] = useState('');
-  const [dateFrom,    setDateFrom]    = useState('');
-  const [dateTo,      setDateTo]      = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [unscheduled, setUnscheduled] = useState(false);
-  const [sort,        setSort]        = useState('newest');
-  const [page,        setPage]        = useState(1);
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [view,        setView]        = useState('table'); // 'table' | 'grid'
+  const [view, setView] = useState('table'); // 'table' | 'grid'
 
   // Bulk
-  const [selected,     setSelected]     = useState(new Set());
+  const [selected, setSelected] = useState(new Set());
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
-  const [bulkError,    setBulkError]    = useState('');
+  const [bulkError, setBulkError] = useState('');
   const bulkRef = useRef(null);
 
   // CSV Import
-  const [importOpen,   setImportOpen]   = useState(false);
-  const [importRows,   setImportRows]   = useState([]);
-  const [importError,  setImportError]  = useState('');
+  const [importOpen, setImportOpen] = useState(false);
+  const [importRows, setImportRows] = useState([]);
+  const [importError, setImportError] = useState('');
   const [importStatus, setImportStatus] = useState(null); // null | 'running' | { done, failed }
   const createPost = useCreatePost();
 
   // Crisis mode
-  const [crisisMode,   setCrisisMode]   = useState(null); // null | 'paused' | 'active'
-  const [crisisLoading,setCrisisLoading]= useState(false);
+  const [crisisMode, setCrisisMode] = useState(null); // null | 'paused' | 'active'
+  const [crisisLoading, setCrisisLoading] = useState(false);
   const [crisisResult, setCrisisResult] = useState(null);
 
   // Debounced search
@@ -170,23 +170,23 @@ export default function Posts() {
   const LIMIT = 30;
 
   const filters = {
-    clientId:     clientId     || undefined,
-    status:       status       || undefined,
-    platform:     platform     || undefined,
+    clientId: clientId || undefined,
+    status: status || undefined,
+    platform: platform || undefined,
     assignedToId: assignedToId || undefined,
-    contentType:  contentType  || undefined,
-    search:       debouncedSearch || undefined,
-    from:         dateFrom ? new Date(dateFrom).toISOString() : undefined,
-    to:           dateTo   ? new Date(dateTo + 'T23:59:59').toISOString() : undefined,
-    unscheduled:  unscheduled ? 'true' : undefined,
+    contentType: contentType || undefined,
+    search: debouncedSearch || undefined,
+    from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
+    to: dateTo ? new Date(dateTo + 'T23:59:59').toISOString() : undefined,
+    unscheduled: unscheduled ? 'true' : undefined,
     sort,
     page,
     limit: LIMIT,
   };
 
   const { data, isLoading, isError, refetch } = usePosts(filters);
-  const posts   = data?.posts ?? [];
-  const total   = data?.total ?? 0;
+  const posts = data?.posts ?? [];
+  const total = data?.total ?? 0;
   const hasMore = page * LIMIT < total;
 
   const bulk = useBulkPosts();
@@ -274,12 +274,12 @@ export default function Posts() {
   // Chip-based active filters (for display) — CLIENT users can't clear their brand lock
   const chips = [
     (!isClient && clientId) && { key: 'clientId', label: `Client: ${clients.find((c) => c.id === clientId)?.name ?? clientId}`, clear: () => { setClientId(''); setPage(1); } },
-    platform    && { key: 'platform',    label: `Platform: ${platform}`,                                                     clear: () => { setPlatform('');    setPage(1); } },
+    platform && { key: 'platform', label: `Platform: ${platform}`, clear: () => { setPlatform(''); setPage(1); } },
     assignedToId && { key: 'assignedToId', label: `Assignee: ${users.find((u) => u.id === assignedToId)?.name ?? assignedToId}`, clear: () => { setAssignedToId(''); setPage(1); } },
-    contentType && { key: 'contentType', label: `Type: ${CONTENT_TYPE_LABELS[contentType] ?? contentType}`,                  clear: () => { setContentType(''); setPage(1); } },
-    dateFrom    && { key: 'dateFrom',    label: `From: ${dateFrom}`,                                                         clear: () => { setDateFrom('');    setPage(1); } },
-    dateTo      && { key: 'dateTo',      label: `To: ${dateTo}`,                                                             clear: () => { setDateTo('');      setPage(1); } },
-    unscheduled && { key: 'unscheduled', label: 'Unscheduled only',                                                          clear: () => { setUnscheduled(false); setPage(1); } },
+    contentType && { key: 'contentType', label: `Type: ${CONTENT_TYPE_LABELS[contentType] ?? contentType}`, clear: () => { setContentType(''); setPage(1); } },
+    dateFrom && { key: 'dateFrom', label: `From: ${dateFrom}`, clear: () => { setDateFrom(''); setPage(1); } },
+    dateTo && { key: 'dateTo', label: `To: ${dateTo}`, clear: () => { setDateTo(''); setPage(1); } },
+    unscheduled && { key: 'unscheduled', label: 'Unscheduled only', clear: () => { setUnscheduled(false); setPage(1); } },
   ].filter(Boolean);
 
   const activeFilterCount = chips.length + (status ? 1 : 0) + (debouncedSearch ? 1 : 0);
@@ -333,7 +333,7 @@ export default function Posts() {
           <div style={{ display: 'flex', border: '1px solid var(--panel-border)', borderRadius: 8, overflow: 'hidden', background: 'var(--panel)' }}>
             {[
               { v: 'table', Icon: List },
-              { v: 'grid',  Icon: LayoutGrid },
+              { v: 'grid', Icon: LayoutGrid },
             ].map(({ v, Icon }) => (
               <button
                 key={v}

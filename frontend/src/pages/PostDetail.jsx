@@ -59,6 +59,7 @@ function getQuickActions(status) {
     case 'DRAFT':          return [{ label: 'Submit for Review',   to: 'REVIEW',         primary: true  }];
     case 'REVIEW':         return [
       { label: 'Approve (Internal)',  to: 'APPROVED',       primary: true  },
+      { label: 'Back to Draft',       to: 'DRAFT',          primary: false },
       { label: 'Request Changes',     to: 'REJECTED',       primary: false, needsReason: true },
     ];
     case 'APPROVED':       return [{ label: 'Mark Client Approved', to: 'CLIENT_APPROVED', primary: true }];
