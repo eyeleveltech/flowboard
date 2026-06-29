@@ -3,8 +3,9 @@ import {
   Lightbulb, PenLine, Eye, CheckCircle, CalendarClock, Send,
   UserCheck, XCircle, Hash, Sparkles, Clock, Activity, Trash2,
   MessageSquare, ChevronLeft, Image, Link2, Plus, X, Loader2,
-  ClipboardCheck, Tag,
+  ClipboardCheck, Tag, Users as UsersIcon
 } from 'lucide-react';
+import { connectSocket } from '@/lib/socket';
 import { useHashtags, useCreateHashtagSet, useDeleteHashtagSet } from '@/hooks/useHashtags';
 import api from '@/lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -114,7 +115,28 @@ export default function PostDetail() {
 
   const captionRef = useRef(null);
 
+  const [activeViewers, setActiveViewers] = useState([]);
+
   useEffect(() => { if (post) setCaption(post.caption ?? ''); }, [post]);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket || !id || !currentUser) return;
+
+    socket.emit('join_post', { postId: id, user: { id: currentUser.id, name: currentUser.name, role: currentUser.role } });
+
+    const handlePresence = (users) => {
+      // Exclude self
+      setActiveViewers(users.filter(u => u.id !== currentUser.id));
+    };
+
+    socket.on('presence_update', handlePresence);
+
+    return () => {
+      socket.off('presence_update', handlePresence);
+      socket.emit('leave_post', { postId: id });
+    };
+  }, [id, currentUser]);
 
   async function patch(data) {
     await updatePost.mutateAsync({ id, ...data });
@@ -201,17 +223,48 @@ export default function PostDetail() {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
             {post.client && <ClientAvatar client={post.client} size={36} />}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 18, lineHeight: 1.3 }}>{post.title}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 13, color: 'var(--muted)' }}>{post.client?.name}</span>
-                {post.contentType && (
-                  <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 980, background: '#F0F0F0', border: '1px solid rgba(0,0,0,0.08)', color: '#6B6B6B', fontWeight: 500 }}>
-                    {CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}
-                  </span>
-                )}
-                {(post.platforms ?? []).map((p) => <PlatformBadge key={p} platform={p} />)}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18, lineHeight: 1.3 }}>{post.title}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>{post.client?.name}</span>
+                  {post.contentType && (
+                    <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 980, background: '#F0F0F0', border: '1px solid rgba(0,0,0,0.08)', color: '#6B6B6B', fontWeight: 500 }}>
+                      {CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}
+                    </span>
+                  )}
+                  {(post.platforms ?? []).map((p) => <PlatformBadge key={p} platform={p} />)}
+                </div>
               </div>
+
+              {/* Real-time Presence UI */}
+              {activeViewers.length > 0 && (
+                <div 
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(9, 88, 217, 0.1)', padding: '4px 8px', borderRadius: 999, border: '1px solid rgba(9, 88, 217, 0.2)' }}
+                >
+                  <UsersIcon size={14} color="#0958D9" />
+                  <div style={{ display: 'flex', marginLeft: 4 }}>
+                    {activeViewers.slice(0, 3).map((v, i) => (
+                      <div key={v.id} title={`${v.name} is viewing`} style={{
+                        width: 24, height: 24, borderRadius: '50%', background: '#0958D9', color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
+                        marginLeft: i > 0 ? -8 : 0, border: '2px solid var(--bg)', zIndex: 10 - i
+                      }}>
+                        {v.name.substring(0, 2).toUpperCase()}
+                      </div>
+                    ))}
+                    {activeViewers.length > 3 && (
+                      <div style={{
+                        width: 24, height: 24, borderRadius: '50%', background: 'var(--panel)', color: 'var(--text)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
+                        marginLeft: -8, border: '2px solid var(--bg)', zIndex: 0
+                      }}>
+                        +{activeViewers.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <StatusBadge status={post.status} />
           </div>

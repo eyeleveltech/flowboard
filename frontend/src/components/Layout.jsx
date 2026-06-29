@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, CheckSquare,
-  Settings, FilePlus, LogOut, FileText, Menu, X,
+  Settings, FilePlus, LogOut, FileText, Menu, X, ChevronDown, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import NotificationBell from './NotificationBell';
 import ErrorBoundary from './ErrorBoundary';
+import CommandPalette from './CommandPalette';
 import { disconnectSocket } from '@/lib/socket';
 import { usePosts } from '@/hooks/usePosts';
+import logoImg from '@/assets/eyelevel-logo-white.png';
 
 const ADMIN_NAV = [
   { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -26,7 +28,7 @@ const CLIENT_NAV = [
   { to: '/settings',  label: 'Profile',   Icon: Settings },
 ];
 
-function SidebarContent({ onNavClick }) {
+function SidebarContent({ onNavClick, isCollapsed, setIsCollapsed }) {
   const user      = useAuthStore((s) => s.user);
   const logout    = useAuthStore((s) => s.logout);
   const navigate  = useNavigate();
@@ -41,8 +43,8 @@ function SidebarContent({ onNavClick }) {
   );
 
   const navItems   = isClient ? CLIENT_NAV : ADMIN_NAV;
-  const brandLabel = isClient ? (user?.client?.name ?? 'Content Portal') : 'FlowBoard';
-  const subLabel   = isClient ? 'EyeLevel Growth Studio' : 'by EyeLevel';
+  const brandLabel = isClient ? (user?.client?.name ?? 'Content Portal') : 'Flow Board';
+  const subLabel   = isClient ? 'EyeLevel Growth Studio' : '';
 
   function handleLogout() {
     disconnectSocket();
@@ -54,20 +56,30 @@ function SidebarContent({ onNavClick }) {
     <>
       <div>
         {/* Brand */}
-        <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--panel-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 12, background: '#111111',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 800, fontSize: 13, letterSpacing: '-0.5px', flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-            }}>
-              {isClient ? (user?.client?.name?.charAt(0)?.toUpperCase() ?? 'C') : 'FB'}
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, letterSpacing: '-0.4px' }}>{brandLabel}</p>
-              <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--muted)', lineHeight: 1.2 }}>{subLabel}</p>
-            </div>
+        <div style={{ marginBottom: 8, paddingBottom: 16, borderBottom: '1px solid var(--panel-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {isClient ? (
+              <div style={{
+                width: 42, height: 42, borderRadius: 12, background: '#111111',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 800, fontSize: 13, letterSpacing: '-0.5px', flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+              }}>
+                {user?.client?.name?.charAt(0)?.toUpperCase() ?? 'C'}
+              </div>
+            ) : (
+              <img 
+                src={logoImg} 
+                alt="EyeLevel" 
+                style={{ 
+                  height: 32,
+                  width: 'auto',
+                  objectFit: 'contain', 
+                  flexShrink: 0,
+                  filter: 'brightness(0)'
+                }} 
+              />
+            )}
           </div>
         </div>
 
@@ -85,11 +97,15 @@ function SidebarContent({ onNavClick }) {
                 to={to}
                 onClick={onNavClick}
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}
+                style={{ 
+                  textDecoration: 'none', display: 'flex', alignItems: 'center', 
+                  gap: 9, justifyContent: isCollapsed ? 'center' : 'flex-start',
+                  padding: isCollapsed ? '12px 0' : '7px 10px'
+                }}
               >
                 <Icon size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{label}</span>
-                {badge > 0 && (
+                {!isCollapsed && <span style={{ flex: 1 }}>{label}</span>}
+                {!isCollapsed && badge > 0 && (
                   <span style={{
                     background: '#111111', color: '#fff',
                     borderRadius: 10, fontSize: 10, fontWeight: 700,
@@ -112,42 +128,59 @@ function SidebarContent({ onNavClick }) {
             <button
               type="button"
               className="primary-button"
-              style={{ width: '100%', justifyContent: 'center', marginBottom: 16, gap: 7 }}
+              style={{ width: '100%', justifyContent: 'center', marginBottom: 16, gap: 7, padding: isCollapsed ? '10px 0' : '10px 16px' }}
             >
               <FilePlus size={15} strokeWidth={2.5} />
-              New Post
+              {!isCollapsed && "New Post"}
             </button>
           </NavLink>
         )}
 
         <div style={{ borderTop: '1px solid var(--panel-border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: '50%',
-              background: '#111111',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 700, fontSize: 13, flexShrink: 0,
-            }}>
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.name}
-              </p>
-              <p style={{ margin: 0, fontSize: 11, color: 'var(--muted)', textTransform: 'capitalize' }}>
-                {isClient ? 'Client' : user?.role?.replace(/_/g, ' ').toLowerCase()}
-              </p>
-            </div>
+          {setIsCollapsed && (
             <button
-              onClick={handleLogout}
-              title="Sign out"
+              onClick={() => setIsCollapsed(!isCollapsed)}
               style={{
-                background: 'none', border: '1px solid rgba(0,0,0,0.1)', color: 'var(--muted)', cursor: 'pointer',
-                padding: '5px 7px', borderRadius: 7, display: 'flex', alignItems: 'center',
+                background: 'none', border: 'none', color: 'var(--muted-2)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px', fontSize: 13, fontWeight: 500,
+                justifyContent: isCollapsed ? 'center' : 'flex-start', width: '100%', marginBottom: 8
               }}
             >
-              <LogOut size={13} />
+              {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+              {!isCollapsed && "Collapse"}
             </button>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: '#E6F4FF', color: '#0958D9',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 14, flexShrink: 0, letterSpacing: '-0.3px'
+            }}>
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'JR'}
+            </div>
+            {!isCollapsed && (
+              <>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user?.name || 'Jaya Raman'}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user?.email || 'jai.eyelevel@gmail.com'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title="Sign out"
+                  style={{
+                    background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                    padding: 4, display: 'flex', alignItems: 'center',
+                  }}
+                >
+                  <LogOut size={15} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -157,8 +190,10 @@ function SidebarContent({ onNavClick }) {
 
 export default function Layout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const drawerRef = useRef(null);
   const location = useLocation();
+  const user = useAuthStore((s) => s.user);
 
   // Close drawer on route change
   useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
@@ -180,10 +215,10 @@ export default function Layout() {
   }, [mobileNavOpen]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-collapsed={isCollapsed}>
       {/* Desktop sidebar */}
       <aside className="sidebar">
-        <SidebarContent onNavClick={undefined} />
+        <SidebarContent onNavClick={undefined} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </aside>
 
       {/* Mobile overlay */}
@@ -227,25 +262,40 @@ export default function Layout() {
             {mobileNavOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
 
-          {/* Centre brand label — desktop hidden (sidebar shows it), mobile shown */}
-          <div className="topbar-brand" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.2 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.3px' }}>FlowBoard</span>
-            <span style={{ fontSize: 10, color: 'var(--muted)' }}>EyeLevel Growth Studio</span>
-          </div>
+          {/* Centre brand label removed */}
+          <div style={{ flex: 1 }}></div>
 
-          <ErrorBoundary fallback={
-            <div style={{ padding: '4px 8px', fontSize: 12, color: 'var(--muted)' }}>
-              Notifications unavailable
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <ErrorBoundary fallback={
+              <div style={{ padding: '4px 8px', fontSize: 12, color: 'var(--muted)' }}>
+                Notifications unavailable
+              </div>
+            }>
+              <NotificationBell />
+            </ErrorBoundary>
+            
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, 
+              cursor: 'pointer', padding: '2px', borderRadius: 20
+            }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: '#E6F4FF', color: '#0958D9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 14, letterSpacing: '-0.3px'
+              }}>
+                {user?.name ? user.name.substring(0, 2).toUpperCase() : 'JR'}
+              </div>
+              <ChevronDown size={14} color="var(--muted)" />
             </div>
-          }>
-            <NotificationBell />
-          </ErrorBoundary>
+          </div>
         </header>
 
         <div style={{ flex: 1, padding: '24px 28px' }} className="main-content">
           <Outlet />
         </div>
       </main>
+      <CommandPalette />
     </div>
   );
 }
