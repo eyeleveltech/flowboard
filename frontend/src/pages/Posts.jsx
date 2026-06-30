@@ -23,7 +23,7 @@ const ALL_STATUSES = ['IDEA', 'DRAFT', 'REVIEW', 'APPROVED', 'CLIENT_APPROVED', 
 const STATUS_LABELS = {
   IDEA: 'Idea', DRAFT: 'Draft', REVIEW: 'In Review',
   APPROVED: 'Approved', CLIENT_APPROVED: 'Client Approved',
-  SCHEDULED: 'Scheduled', PAUSED: 'Paused', PUBLISHED: 'Published', REJECTED: 'Changes Requested',
+  SCHEDULED: 'Scheduled', PAUSED: 'Paused', PUBLISHED: 'Published', REJECTED: 'Change Request',
 };
 
 const PLATFORMS = ['INSTAGRAM', 'LINKEDIN', 'FACEBOOK', 'TWITTER', 'YOUTUBE', 'TIKTOK', 'THREADS', 'BLUESKY'];
@@ -319,7 +319,18 @@ export default function Posts() {
                 paddingTop: 7, paddingBottom: 7,
                 border: '1px solid var(--panel-border)', borderRadius: 8,
                 background: 'var(--panel)', fontSize: 13, color: 'var(--text)',
-                fontFamily: 'inherit', outline: 'none', width: 200,
+                fontFamily: 'inherit', outline: 'none', width: search ? 260 : 200,
+                transition: 'all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              }}
+              onFocus={(e) => {
+                e.target.style.width = '260px';
+                e.target.style.borderColor = 'var(--text)';
+                e.target.style.boxShadow = '0 0 0 1px var(--text)';
+              }}
+              onBlur={(e) => {
+                if (!search) e.target.style.width = '200px';
+                e.target.style.borderColor = 'var(--panel-border)';
+                e.target.style.boxShadow = 'none';
               }}
             />
             {search && (
@@ -419,10 +430,11 @@ export default function Posts() {
         <button
           onClick={() => { setStatus(''); setPage(1); }}
           style={{
-            padding: '5px 12px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
-            border: `1px solid ${!status ? '#111' : 'rgba(0,0,0,0.1)'}`,
+            padding: '6px 14px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
+            border: `1px solid ${!status ? '#111' : 'rgba(0,0,0,0.12)'}`,
             background: !status ? '#111' : 'transparent',
-            color: !status ? '#fff' : 'var(--muted)', fontWeight: !status ? 600 : 400,
+            color: !status ? '#fff' : 'var(--muted)', fontWeight: !status ? 600 : 500,
+            transition: 'all 0.15s ease',
           }}
         >
           All
@@ -432,11 +444,11 @@ export default function Posts() {
             key={s}
             onClick={() => { setStatus(status === s ? '' : s); setPage(1); }}
             style={{
-              padding: '5px 12px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
-              border: `1px solid ${status === s ? '#111' : 'rgba(0,0,0,0.1)'}`,
+              padding: '6px 14px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
+              border: `1px solid ${status === s ? '#111' : 'rgba(0,0,0,0.12)'}`,
               background: status === s ? '#111' : 'transparent',
-              color: status === s ? '#fff' : 'var(--muted)', fontWeight: status === s ? 600 : 400,
-              transition: 'all 0.1s',
+              color: status === s ? '#fff' : 'var(--muted)', fontWeight: status === s ? 600 : 500,
+              transition: 'all 0.15s ease',
             }}
           >
             {STATUS_LABELS[s]}
@@ -447,11 +459,12 @@ export default function Posts() {
         <button
           onClick={() => { setUnscheduled((v) => !v); setPage(1); }}
           style={{
-            padding: '5px 12px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
-            border: `1px solid ${unscheduled ? '#111' : 'rgba(0,0,0,0.1)'}`,
+            padding: '6px 14px', borderRadius: 980, fontSize: 12, cursor: 'pointer',
+            border: `1px solid ${unscheduled ? '#111' : 'rgba(0,0,0,0.12)'}`,
             background: unscheduled ? '#111' : 'transparent',
-            color: unscheduled ? '#fff' : 'var(--muted)', fontWeight: unscheduled ? 600 : 400,
+            color: unscheduled ? '#fff' : 'var(--muted)', fontWeight: unscheduled ? 600 : 500,
             display: 'flex', alignItems: 'center', gap: 5,
+            transition: 'all 0.15s ease',
           }}
         >
           <CalendarOff size={12} /> No date
@@ -643,10 +656,11 @@ export default function Posts() {
           {/* Table header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '32px 1fr 130px 160px 110px 110px 130px 90px',
-            padding: '10px 16px',
-            borderBottom: '1px solid rgba(0,0,0,0.08)',
-            background: '#FAFAFA',
+            gridTemplateColumns: '32px minmax(200px, 1fr) 130px 110px 100px 130px 110px 110px',
+            gap: '16px',
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--panel-border)',
+            background: 'var(--fill)',
           }}>
             <input
               type="checkbox"
@@ -654,8 +668,16 @@ export default function Posts() {
               onChange={toggleAll}
               style={{ cursor: 'pointer', accentColor: '#111111' }}
             />
-            {['Post', 'Client', 'Platforms', 'Type', 'Status', 'Scheduled', 'Assignee'].map((h) => (
-              <span key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+            {[
+              { label: 'Post' },
+              { label: 'Client' },
+              { label: 'Platforms', align: 'center' },
+              { label: 'Type', align: 'center' },
+              { label: 'Status', align: 'center' },
+              { label: 'Scheduled', align: 'center' },
+              { label: 'Assignee', align: 'center' }
+            ].map(({ label, align }) => (
+              <span key={label} style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: align || 'left', justifySelf: align || 'start' }}>{label}</span>
             ))}
           </div>
 
@@ -665,15 +687,16 @@ export default function Posts() {
               key={post.id}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '32px 1fr 130px 160px 110px 110px 130px 90px',
-                padding: '11px 16px',
-                borderBottom: i < posts.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                background: selected.has(post.id) ? '#F5F5F5' : 'transparent',
+                gridTemplateColumns: '32px minmax(200px, 1fr) 130px 110px 100px 130px 110px 110px',
+                gap: '16px',
+                padding: '16px 16px',
+                borderBottom: i < posts.length - 1 ? '1px solid var(--panel-border)' : 'none',
+                background: selected.has(post.id) ? 'var(--fill)' : 'transparent',
                 alignItems: 'center',
                 transition: 'background 0.1s',
                 cursor: 'pointer',
               }}
-              onMouseOver={(e) => { if (!selected.has(post.id)) e.currentTarget.style.background = '#FAFAFA'; }}
+              onMouseOver={(e) => { if (!selected.has(post.id)) e.currentTarget.style.background = 'var(--fill)'; }}
               onMouseOut={(e) => { if (!selected.has(post.id)) e.currentTarget.style.background = 'transparent'; }}
               onClick={(e) => { if (e.target.type === 'checkbox') return; navigate(`/posts/${post.id}`); }}
             >
@@ -682,7 +705,7 @@ export default function Posts() {
                 checked={selected.has(post.id)}
                 onChange={() => toggleSelect(post.id)}
                 onClick={(e) => e.stopPropagation()}
-                style={{ cursor: 'pointer', accentColor: '#111111' }}
+                style={{ cursor: 'pointer', accentColor: '#111111', alignSelf: 'flex-start', marginTop: 3 }}
               />
               {/* Title + caption */}
               <div style={{ minWidth: 0, paddingRight: 12 }}>
@@ -700,26 +723,26 @@ export default function Posts() {
                 {post.client?.name ?? '—'}
               </span>
               {/* Platforms */}
-              <div style={{ display: 'flex', gap: 3, flexWrap: 'nowrap', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'nowrap', overflow: 'hidden', justifySelf: 'center' }}>
                 {(post.platforms ?? []).slice(0, 2).map((p) => <PlatformBadge key={p} platform={p} />)}
                 {(post.platforms ?? []).length > 2 && (
                   <span style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap', alignSelf: 'center' }}>+{post.platforms.length - 2}</span>
                 )}
               </div>
               {/* Content type */}
-              <span style={{ fontSize: 11, color: 'var(--muted-2)', fontWeight: 500 }}>
+              <span style={{ fontSize: 11, color: 'var(--muted-2)', fontWeight: 500, justifySelf: 'center' }}>
                 {post.contentType ? CONTENT_TYPE_LABELS[post.contentType] : <span style={{ color: 'var(--muted-2)', opacity: 0.4 }}>—</span>}
               </span>
               {/* Status */}
               <StatusBadge status={post.status} />
               {/* Scheduled */}
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+              <span style={{ fontSize: 12, color: 'var(--muted)', justifySelf: 'center' }}>
                 {post.scheduledAt
                   ? new Date(post.scheduledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                   : <span style={{ color: 'var(--muted-2)', opacity: 0.4 }}>—</span>}
               </span>
               {/* Assignee */}
-              <span style={{ fontSize: 12, color: post.assignedTo ? 'var(--muted)' : 'var(--muted-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: post.assignedTo ? 1 : 0.5 }}>
+              <span style={{ fontSize: 12, color: post.assignedTo ? 'var(--text)' : 'var(--muted-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: post.assignedTo ? 1 : 0.5, justifySelf: 'center' }}>
                 {post.assignedTo?.name ?? 'Unassigned'}
               </span>
             </div>

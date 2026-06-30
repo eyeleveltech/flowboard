@@ -35,21 +35,22 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          position: 'relative', background: 'none', border: 'none',
-          color: 'var(--muted)', cursor: 'pointer', padding: 6,
-          borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative', background: 'transparent', border: 'none',
+          color: 'var(--muted-2)', cursor: 'pointer', padding: 8,
+          borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s'
         }}
         aria-label="Notifications"
       >
         <Bell size={17} />
         {unread > 0 && (
           <span style={{
-            position: 'absolute', top: 3, right: 3,
-            width: 15, height: 15, borderRadius: '50%',
-            background: '#111111', color: '#fff',
-            fontSize: 9, fontWeight: 700,
+            position: 'absolute', top: -5, right: -5,
+            width: 18, height: 18, borderRadius: '50%',
+            background: '#EF4444', color: '#fff',
+            fontSize: 10, fontWeight: 800,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            lineHeight: 1, border: '1.5px solid var(--bg)',
+            lineHeight: 1, border: '2px solid var(--bg)',
           }}>
             {unread > 9 ? '9+' : unread}
           </span>

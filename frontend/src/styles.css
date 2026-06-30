@@ -56,7 +56,10 @@
   --radius-btn:   980px;
   --radius-input: 10px;
   --nav-h:        44px;
+
+  --topbar-bg:    rgba(255, 255, 255, 0.9);
 }
+
 
 /* ═══ Reset ══════════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; }
@@ -104,6 +107,11 @@ p  { margin-top: 0; line-height: 20px; }
   min-height: 100vh;
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
+  transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-shell[data-collapsed="true"] {
+  grid-template-columns: 72px minmax(0, 1fr);
 }
 
 /* ═══ Sidebar ═════════════════════════════════════════════════════════════ */
@@ -124,7 +132,7 @@ p  { margin-top: 0; line-height: 20px; }
 
 /* ═══ Navigation ══════════════════════════════════════════════════════════ */
 
-.nav-list { display: grid; gap: 1px; }
+.nav-list { display: grid; gap: 12px; }
 
 .nav-item {
   display: flex;
@@ -148,10 +156,10 @@ p  { margin-top: 0; line-height: 20px; }
 /* ═══ Topbar ══════════════════════════════════════════════════════════════ */
 
 .topbar-outer {
-  height: var(--nav-h);
-  padding: 0 24px;
+  height: 64px;
+  padding: 0 28px;
   border-bottom: 1px solid var(--separator);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--topbar-bg);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   display: flex;
@@ -304,7 +312,7 @@ p  { margin-top: 0; line-height: 20px; }
 /* ═══ Dialog — solid white, strong shadow ═════════════════════════════════ */
 
 [data-slot="dialog-content"] {
-  background: #FFFFFF !important;
+  background: var(--panel) !important;
   border-radius: 16px !important;
   border: 1px solid rgba(0,0,0,0.1) !important;
   box-shadow:

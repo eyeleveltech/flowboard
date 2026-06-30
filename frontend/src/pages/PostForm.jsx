@@ -318,7 +318,7 @@ export default function PostForm() {
   const firstImageUrl = carouselImages[0]?.url;
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 1024 }}>
       <div style={{ marginBottom: 24 }}>
         <p className="eyebrow">Content</p>
         <h2 style={{ margin: 0 }}>New Post</h2>
