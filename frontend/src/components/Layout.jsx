@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, CheckSquare,
-  Settings, FilePlus, LogOut, FileText, Menu, X, ChevronDown, ChevronLeft, ChevronRight
+  Settings, FilePlus, LogOut, FileText, Menu, X, ChevronDown, ChevronLeft, ChevronRight, User
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import NotificationBell from './NotificationBell';
@@ -18,14 +18,12 @@ const ADMIN_NAV = [
   { to: '/posts',     label: 'Posts',     Icon: FileText },
   { to: '/calendar',  label: 'Calendar',  Icon: Calendar },
   { to: '/approvals', label: 'Approvals', Icon: CheckSquare, badgeKey: 'approvals' },
-  { to: '/settings',  label: 'Settings',  Icon: Settings },
 ];
 
 const CLIENT_NAV = [
   { to: '/calendar',  label: 'Calendar',  Icon: Calendar },
   { to: '/posts',     label: 'Posts',     Icon: FileText },
   { to: '/approvals', label: 'Approvals', Icon: CheckSquare, badgeKey: 'client-approvals' },
-  { to: '/settings',  label: 'Profile',   Icon: Settings },
 ];
 
 function SidebarContent({ onNavClick, isCollapsed, setIsCollapsed }) {
@@ -191,9 +189,13 @@ function SidebarContent({ onNavClick, isCollapsed, setIsCollapsed }) {
 export default function Layout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const drawerRef = useRef(null);
+  const profileMenuRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   // Close drawer on route change
   useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
@@ -207,6 +209,18 @@ export default function Layout() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [mobileNavOpen]);
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    function handler(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [profileMenuOpen]);
 
   // Lock body scroll when drawer open
   useEffect(() => {
@@ -274,19 +288,101 @@ export default function Layout() {
               <NotificationBell />
             </ErrorBoundary>
             
-            <div style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, 
-              cursor: 'pointer', padding: '2px', borderRadius: 20
-            }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: '50%',
-                background: '#E6F4FF', color: '#0958D9',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: 14, letterSpacing: '-0.3px'
-              }}>
-                {user?.name ? user.name.substring(0, 2).toUpperCase() : 'JR'}
+            <div ref={profileMenuRef} style={{ position: 'relative' }}>
+              <div 
+                onClick={() => setProfileMenuOpen((v) => !v)}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: 6, 
+                  cursor: 'pointer', padding: '2px', borderRadius: 20
+                }}
+              >
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: '#E6F4FF', color: '#0958D9',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 700, fontSize: 14, letterSpacing: '-0.3px'
+                }}>
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'JR'}
+                </div>
+                <ChevronDown size={14} color="var(--muted)" />
               </div>
-              <ChevronDown size={14} color="var(--muted)" />
+
+              {profileMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '12px',
+                  width: '240px',
+                  background: '#fff',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  zIndex: 100,
+                  padding: '8px 0',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,0,0,0.06)', marginBottom: '8px' }}>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user?.name || 'Jaya Raman'}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#6B6B6B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user?.email || 'jai.eyelevel@gmail.com'}
+                    </p>
+                  </div>
+                  
+                  <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <button 
+                      onClick={() => { navigate('/profile'); setProfileMenuOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                        padding: '8px 12px', background: 'transparent', border: 'none',
+                        textAlign: 'left', fontSize: '13px', color: '#3A3A3A', cursor: 'pointer',
+                        borderRadius: '6px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#F5F5F5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <User size={15} color="#6B6B6B" /> My Profile
+                    </button>
+
+                    {!['CLIENT', 'USER', 'EDITOR'].includes(user?.role) && (
+                      <button 
+                        onClick={() => { navigate('/settings'); setProfileMenuOpen(false); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                          padding: '8px 12px', background: 'transparent', border: 'none',
+                          textAlign: 'left', fontSize: '13px', color: '#3A3A3A', cursor: 'pointer',
+                          borderRadius: '6px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#F5F5F5'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <Settings size={15} color="#6B6B6B" /> Settings
+                      </button>
+                    )}
+                    
+                    <button 
+                      onClick={() => {
+                        disconnectSocket();
+                        logout();
+                        navigate('/login');
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                        padding: '8px 12px', background: 'transparent', border: 'none',
+                        textAlign: 'left', fontSize: '13px', color: '#E53E3E', cursor: 'pointer',
+                        borderRadius: '6px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#FFF5F5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <LogOut size={15} color="#E53E3E" /> Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

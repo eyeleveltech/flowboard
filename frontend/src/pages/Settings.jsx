@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Shield, Users, ArrowDown, Plus, Trash2, CheckCircle,
   PenLine, Eye, UserCheck, CalendarClock, Send, Mail,
@@ -132,7 +133,7 @@ const ALL_SECTIONS = [
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export default function Settings() {
+export default function Settings({ isProfileOnly }) {
   const currentUser      = useAuthStore((s) => s.user);
   const setUser          = useAuthStore((s) => s.login);
   const token            = useAuthStore((s) => s.token);
@@ -147,8 +148,19 @@ export default function Settings() {
   const updateProfile = useUpdateProfile();
   const changePassword= useChangePassword();
 
+  const location = useLocation();
   const isClientRole = currentUser?.role === 'CLIENT';
-  const [section, setSection]   = useState(isClientRole || currentUser?.role === 'USER' ? 'profile' : 'team');
+  const defaultSection = isProfileOnly || isClientRole ? 'profile' : 'team';
+  const [section, setSection]   = useState(defaultSection);
+
+  useEffect(() => {
+    if (isProfileOnly) {
+      setSection('profile');
+    } else if (section === 'profile') {
+      setSection('team');
+    }
+  }, [isProfileOnly]);
+
   const [addOpen, setAddOpen]   = useState(false);
   const [addForm, setAddForm]   = useState({ name: '', email: '', password: '', role: 'USER', department: '', jobTitle: '', clientId: '' });
   const [addError, setAddError] = useState('');
@@ -172,7 +184,9 @@ export default function Settings() {
 
   const isFullAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(currentUser?.role);
   const isAdmin     = ['SUPER_ADMIN', 'ADMIN', 'ADMIN_MANAGER', 'MANAGER'].includes(currentUser?.role);
-  const SECTIONS    = ALL_SECTIONS.filter((s) => s.roles === null || s.roles.includes(currentUser?.role));
+  const SECTIONS    = isProfileOnly
+    ? [{ id: 'profile', label: 'Your Profile', icon: User, roles: null }]
+    : ALL_SECTIONS.filter((s) => s.id !== 'profile' && (s.roles === null || s.roles.includes(currentUser?.role)));
 
   /* ── Handlers ── */
 
@@ -249,20 +263,21 @@ export default function Settings() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
       <div>
-        <p className="eyebrow">{isClientRole ? 'Account' : 'Admin'}</p>
-        <h2 style={{ margin: 0 }}>Settings</h2>
+        <p className="eyebrow">{isProfileOnly ? 'Account' : (isClientRole ? 'Account' : 'Admin')}</p>
+        <h2 style={{ margin: 0 }}>{isProfileOnly ? 'Your Profile' : 'Settings'}</h2>
         <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 3 }}>
-          {isClientRole
+          {isProfileOnly || isClientRole
             ? 'Update your profile and change your password.'
             : 'Manage your team, client access, approvals, and account.'}
         </p>
       </div>
 
-      {/* Section nav */}
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(0,0,0,0.08)', paddingBottom: 0 }}>
-        {SECTIONS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
+      {/* Section nav - hidden if profile only */}
+      {!isProfileOnly && (
+        <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(0,0,0,0.08)', paddingBottom: 0 }}>
+          {SECTIONS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
             onClick={() => setSection(id)}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
@@ -281,6 +296,7 @@ export default function Settings() {
           </button>
         ))}
       </div>
+      )}
 
       {/* ── TEAM ─────────────────────────────────────────────────────────── */}
       {section === 'team' && (
