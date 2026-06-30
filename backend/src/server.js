@@ -22,3 +22,16 @@ const port = process.env.PORT || 4000;
 server.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);
 });
+
+// Graceful shutdown for nodemon restarts to prevent EADDRINUSE
+process.once('SIGUSR2', () => {
+  server.close(() => {
+    process.kill(process.pid, 'SIGUSR2');
+  });
+});
+
+process.on('SIGINT', () => {
+  server.close(() => {
+    process.exit(0);
+  });
+});

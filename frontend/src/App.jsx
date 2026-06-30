@@ -38,6 +38,7 @@ export default function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/approvals" element={<Approvals />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Settings isProfileOnly={true} />} />
           <Route path="*" element={<Navigate to="/approvals" replace />} />
         </Route>
       </Routes>
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/approvals" element={<Approvals />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Settings isProfileOnly={true} />} />
       </Route>
     </Routes>
   );
